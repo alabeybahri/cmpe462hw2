@@ -1,16 +1,7 @@
 from collections import Counter
 import numpy as np
 import random
-import matplotlib.pyplot as plt
-
-
-def plot_centroids(centroids, image_shape=(28, 28)):
-    """Plot centroids as images."""
-    _, axes = plt.subplots(1, len(centroids), figsize=(12, 3))
-    for ax, centroid in zip(axes, centroids):
-        ax.imshow(centroid.reshape(image_shape), cmap="gray")
-        ax.axis("off")
-    plt.show()
+from sklearn.decomposition import PCA
 
 
 def read_images(filename):
@@ -120,6 +111,7 @@ def calculate_accuracy(cluster_labels):
     accuracy = true_label_count / total_length
     print("Accuracy:", accuracy)
 
+
 train_images = read_images("train-images.idx3-ubyte")
 train_labels = read_labels("train-labels.idx1-ubyte")
 correct_train_images, correct_train_labels = get_correct_digits(
@@ -133,17 +125,40 @@ normalized_train_images = correct_train_images
 clusters, centroids, sse, cluster_labels = k_means(
     normalized_train_images, correct_train_labels, "euclidean", num_clusters=4
 )
-print("SSE:", sse)
-calculate_accuracy(cluster_labels)
 
 cluster_sizes = {k: len(v) for k, v in clusters.items()}
-print("Cluster sizes:", cluster_sizes)
+print("Euclidean Cluster sizes:", cluster_sizes)
+print("Euclidean SSE:", sse)
+calculate_accuracy(cluster_labels)
 
 
 clusters, centroids, sse, cluster_labels = k_means(
     normalized_train_images, correct_train_labels, "cosine", num_clusters=4
 )
 cluster_sizes = {k: len(v) for k, v in clusters.items()}
-print("Cluster sizes:", cluster_sizes)
-print("SSE:", sse)
+print("Cosine Cluster sizes:", cluster_sizes)
+print("Cosine SSE:", sse)
+calculate_accuracy(cluster_labels)
+
+# PCA
+pca = PCA(n_components=50)
+pca.fit(normalized_train_images)
+transformed_images = pca.transform(normalized_train_images)
+
+clusters, centroids, sse, cluster_labels = k_means(
+    transformed_images, correct_train_labels, "euclidean", num_clusters=4
+)
+cluster_sizes = {k: len(v) for k, v in clusters.items()}
+print("PCA Euclidean Cluster sizes:", cluster_sizes)
+
+print("PCA SSE:", sse)
+calculate_accuracy(cluster_labels)
+
+
+clusters, centroids, sse, cluster_labels = k_means(
+    transformed_images, correct_train_labels, "cosine", num_clusters=4
+)
+cluster_sizes = {k: len(v) for k, v in clusters.items()}
+print("PCA Cosine Cluster sizes:", cluster_sizes)
+print("PCA SSE:", sse)
 calculate_accuracy(cluster_labels)
